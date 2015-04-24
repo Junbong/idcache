@@ -4,7 +4,4 @@
 ## License
 Released under the permissive [MIT License][].
 
-## Author
-[Junbong][].
-
 [MIT License]: https://github.com/Junbong/idcache/blob/master/LICENSE
