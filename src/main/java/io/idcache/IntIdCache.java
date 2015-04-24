@@ -2,7 +2,6 @@ package io.idcache;
 
 
 import io.idcache.increaser.Increaser;
-import io.idcache.increaser.integer.RandomLeapIntIncreaser;
 import io.idcache.increaser.integer.SequentialIntIncreaser;
 
 import java.util.concurrent.atomic.AtomicInteger;
