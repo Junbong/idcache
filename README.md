@@ -19,7 +19,7 @@ IntIdCache cache = (IntIdCache) IdCaches.newIntIdentifierCacheBuilder()
 		.setLimitationPolicy(LimitationPolicy.THROW_EXCEPTION_POLICY)
 		.build();
 
-// 10000000, 10000001, 10000002, 100000003…, 19999999
+// 10000000, 10000001, 10000002, 10000003…, 19999999
 // an exception occurred when value reached 20000000
 
 // Or simply,
@@ -33,7 +33,7 @@ IntIdCache simplestCache = new IntIdCache();
 ### Create random-range incremental value generator
 ```java
 // This idCache provides value with incrementing previous by RANDOM adder
-IntIdCache randomCache = new IntIdCache(10000000000, new RandomLeapIntIncreaser(1, 9));
+IntIdCache randomCache = new IntIdCache(10000000, new RandomLeapIntIncreaser(1, 9));
 
 // 10000000, 10000005, 10000009, 10000012… 19999998
 ```
