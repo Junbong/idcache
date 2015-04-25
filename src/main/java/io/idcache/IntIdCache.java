@@ -16,7 +16,7 @@ public class IntIdCache extends AbstractNumberIdCache<Integer> {
 
 
 
-	public IntIdCache(Integer initValue, Integer minValue, Integer maxValue, Increaser<Integer> increaser) {
+	public IntIdCache(Integer initValue, Integer minValue, Integer maxValue, Increaser<? extends Number> increaser) {
 		super(initValue, minValue, maxValue, increaser);
 
 		this.mCounter = new AtomicInteger(getInitial());
@@ -24,19 +24,19 @@ public class IntIdCache extends AbstractNumberIdCache<Integer> {
 
 
 
-	public IntIdCache(Integer initValue, Integer minValue, Increaser<Integer> increaser) {
+	public IntIdCache(Integer initValue, Integer minValue, Increaser<? extends Number> increaser) {
 		this(initValue, minValue, Integer.MAX_VALUE, increaser);
 	}
 
 
 
-	public IntIdCache(Integer initValue, Increaser<Integer> increaser) {
-		this(initValue, 0, Integer.MAX_VALUE, increaser);
+	public IntIdCache(Integer maxValue, Increaser<? extends Number> increaser) {
+		this(0, 0, maxValue, increaser);
 	}
 
 
 
-	public IntIdCache(Increaser<Integer> increaser) {
+	public IntIdCache(Increaser<? extends Number> increaser) {
 		this(0, 0, Integer.MAX_VALUE, increaser);
 	}
 
@@ -48,13 +48,6 @@ public class IntIdCache extends AbstractNumberIdCache<Integer> {
 
 
 
-	@Override public Integer set(Integer newValue) {
-		mCounter.set(newValue);
-		return newValue;
-	}
-
-
-
 	@Override public Integer current() {
 		return mCounter.get();
 	}
@@ -62,7 +55,7 @@ public class IntIdCache extends AbstractNumberIdCache<Integer> {
 
 
 	@Override protected Integer onNextImpl() throws LimitationReachedException {
-		final Integer nextFactor = getIncreaser().nextFactor().intValue();
+		final Integer nextFactor = (Integer) getIncreaser().nextFactor();
 		final Integer newValue = mCounter.addAndGet(nextFactor);
 
 		if (newValue>getMaximum() || newValue<getMinimum())
@@ -70,5 +63,11 @@ public class IntIdCache extends AbstractNumberIdCache<Integer> {
 					getMaximum(), (current()-nextFactor), nextFactor));
 
 		return newValue;
+	}
+
+
+
+	@Override protected void onSetImpl(Integer newValue) {
+		mCounter.set(newValue);
 	}
 }
