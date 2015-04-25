@@ -34,7 +34,7 @@ IntIdCache simplestCache = new IntIdCache();
 ### Create random-range incremental value generator
 ```java
 // This idCache provides value with incrementing previous by RANDOM adder
-IntIdCache randomCache = new IntIdCache(10000000, new RandomLeapIntIncreaser(1, 9));
+IntIdCache randomCache = new IntIdCache(10000000, 20000000, new RandomLeapIntIncreaser(1, 9));
 
 // 10000000, 10000005, 10000009, 10000012… 19999998
 ```
