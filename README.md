@@ -23,10 +23,11 @@ IntIdCache cache = (IntIdCache) IdCaches.newIntIdentifierCacheBuilder()
 // an exception occurred when value reached 20000000
 
 // Or simply,
-// (in this case, max value is INTEGER.MAX_VALUE)
-IntIdCache simpleCache = new IntIdCache(10000000, new SequentialIntIncreaser(1));
+// (in this case, id range is 0 to 10000000)
+IntIdCache simpleCache = new IntIdCache(10000000, new SequentialIntIncreaser());
 
 // Or,
+// (id range 0 to Integer.MAX_VALUE)
 IntIdCache simplestCache = new IntIdCache();
 ```
 
