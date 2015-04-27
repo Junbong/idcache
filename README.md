@@ -5,10 +5,10 @@ The *idCache* is an policy based identifier generator with cache library written
 Released under the permissive [MIT License][].
 
 ## Main Goals
-### Policy based
-### Non-duplicated, unique values
-### Concurrency
-### Stability
+* Policy based
+* Non-duplicated, unique values
+* Concurrency
+* Stability
 
 ## Usage
 ### Create simple incremental value generator
