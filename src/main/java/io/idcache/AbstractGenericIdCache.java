@@ -11,6 +11,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Basically implemented, general-purpose idCache class.
  * It is better then {@code implements} {@link IdCache} {@code interface},
  * {@code extends} this class instead because it almost implemented already.
+ *
+ * @since 0.0.1
+ * @version 2.0.0
+ * @author Junbong
  */
 public abstract class AbstractGenericIdCache<T> implements IdCache<T> {
 	private final Increaser<?> mIncreaser;
@@ -18,38 +22,62 @@ public abstract class AbstractGenericIdCache<T> implements IdCache<T> {
 	private final T mInitialValue;
 	private final T mMinimumValue;
 	private final T mMaximumValue;
-
-	private LimitationPolicy mLimitPolicy = LimitationPolicy.ROLL_TO_MINIMUM_POLICY;
+	private final LimitationPolicy mLimitPolicy;
 
 
 
 	/**
-	 * Default constructor of this cache class.
-	 * @param initValue Initial value of this cache. If {@code null} value provided,
-	 * {@link #getInitial()} returns value of {@link #getMinimum()}.
-	 * @param minValue Not {@code null}. Minimum value of this cache.
-	 * If limitation policy set as {@link LimitationPolicy#ROLL_TO_MINIMUM_POLICY},
-	 * value of cache counter would be set to this value.
-	 * @param maxValue Not {@code null}. Maximum value of this cache.
-	 * If {@link #next()} >= maxValue then an action performed by following
-	 * limitation policy.
-	 * @param increaser increaser object. Increaser generates a factor in
-	 * every moment when {@link #next()} method called, so idCache compounds
-	 * this new factor with value which retrieved from {@link #current()} method.
+	 * Constructs new cache with specified values, increaser and default limitation policy.
+	 *
+	 * @param initValue        Initial value of this cache. If {@code null} value provided,
+	 *                         {@link #getInitial()} returns value of {@link #getMinimum()}.
+	 * @param minValue         Not {@code null}. Minimum value of this cache.
+	 *                         If limitation policy set as {@link LimitationPolicy#ROLL_TO_MINIMUM_POLICY},
+	 *                         value of cache counter would be set to this value.
+	 * @param maxValue         Not {@code null}. Maximum value of this cache.
+	 *                         If {@link #next()} >= maxValue then an action performed by following
+	 *                         limitation policy.
+	 * @param increaser        increaser object. Increaser generates a factor in
+	 *                         every moment when {@link #next()} method called, so idCache compounds
+	 *                         this new factor with value which retrieved from {@link #current()} method.
 	 */
 	public AbstractGenericIdCache(T initValue, T minValue, T maxValue, Increaser<?> increaser) {
-		if (minValue == null)
-			throw new IllegalArgumentException("Minimum value cannot be null");
-		if (maxValue == null)
-			throw new IllegalArgumentException("Maximum value cannot be null");
+		this(initValue, minValue, maxValue, increaser, null);
+	}
+
+
+
+	/**
+	 * Constructs new cache with specified values, increaser and limitation policy.
+	 *
+	 * @param initValue        Initial value of this cache. If {@code null} value provided,
+	 *                         {@link #getInitial()} returns value of {@link #getMinimum()}.
+	 * @param minValue         Not {@code null}. Minimum value of this cache.
+	 *                         If limitation policy set as {@link LimitationPolicy#ROLL_TO_MINIMUM_POLICY},
+	 *                         value of cache counter would be set to this value.
+	 * @param maxValue         Not {@code null}. Maximum value of this cache.
+	 *                         If {@link #next()} >= maxValue then an action performed by following
+	 *                         limitation policy.
+	 * @param increaser        increaser object. Increaser generates a factor in
+	 *                         every moment when {@link #next()} method called, so idCache compounds
+	 *                         this new factor with value which retrieved from {@link #current()} method.
+	 * @param limitationPolicy limitation policy of this cache. The limitation event triggered according to this policy
+	 *                         when maximum value reached
+	 */
+	public AbstractGenericIdCache(T initValue, T minValue, T maxValue, Increaser<?> increaser, LimitationPolicy limitationPolicy) {
+		if (minValue == null)  throw new IllegalArgumentException("minimum value cannot be null");
+		if (maxValue == null)  throw new IllegalArgumentException("maximum value cannot be null");
+		if (increaser == null) throw new IllegalArgumentException("increaser cannot be null");
 
 		this.mInitialValue = initValue;
 		this.mMinimumValue = minValue;
 		this.mMaximumValue = maxValue;
 		this.mIncreaser = increaser;
-
 		this.mHasRolled = new AtomicBoolean(!getInitial().equals(getMinimum())
 				&& !getInitial().equals(getMaximum()));
+
+		this.mLimitPolicy = (limitationPolicy!=null)?
+							limitationPolicy : LimitationPolicy.THROW_EXCEPTION_POLICY;
 	}
 
 
@@ -82,6 +110,7 @@ public abstract class AbstractGenericIdCache<T> implements IdCache<T> {
 
 
 
+	@Override
 	public boolean hasRolled() {
 		return this.mHasRolled.get();
 	}
@@ -104,15 +133,7 @@ public abstract class AbstractGenericIdCache<T> implements IdCache<T> {
 
 
 
-	/**
-	 * <P>Returns newly generated value.
-	 * If not 'rolled' yet,
-	 * </P>
-	 * <P>This method is declared to <I>final</I>. So you can override
-	 * {@link #onNextImpl()} method if your own implementation needed.
-	 * </P>
-	 * @return newly generated identifier
-	 */
+	@Override
 	public final T next() {
 		T value;
 
@@ -131,7 +152,7 @@ public abstract class AbstractGenericIdCache<T> implements IdCache<T> {
 				if ((value=onNextImpl()) != null) setRolled(true);
 			}
 
-		// Exception would be occurred when new value is over then maximum.
+		// Exception will be occurred when new value is over then maximum.
 		} catch (LimitationReachedException e) {
 			switch (getLimitationPolicy()) {
 				case INITIALIZE_POLICY:
@@ -159,21 +180,17 @@ public abstract class AbstractGenericIdCache<T> implements IdCache<T> {
 
 
 	/**
-	 * <P>Replace this cache`s current value with given value.
-	 * If given value is {@code null},
-	 * In ordinary case, do not call this method directly.
-	 * </P>
-	 * <P>This method is declared to <I>final</I>. So you can override
-	 * {@link #onSetImpl(Object)} method if your own implementation needed.
-	 * </P>
-	 * @param newValue the value to replace current one
-	 * @return given value passed
+	 * Replace the current value of this cache with specified value.
+	 *
+	 * @param newValue value to replace
+	 * @return specified new value be passed
+	 * @throws NullPointerException {@code null} passed
 	 */
 	@Override public final T set(T newValue) {
-		if (newValue != null) {
-			onSetImpl(newValue);
-			setRolled(true);
-		}
+		if (newValue == null) throw new NullPointerException();
+
+		onSetImpl(newValue);
+		setRolled(true);
 
 		return newValue;
 	}
@@ -199,8 +216,16 @@ public abstract class AbstractGenericIdCache<T> implements IdCache<T> {
 
 
 
+	/**
+	 * Set new limitation policy of this cache.
+	 *
+	 * @param policy new limitation policy
+	 * @deprecated nothing happened with this method
+	 */
+	@Deprecated
+	@SuppressWarnings("all")
 	public void setLimitationPolicy(LimitationPolicy policy) {
-		this.mLimitPolicy = policy;
+		/*this.mLimitPolicy = policy;*/
 	}
 
 

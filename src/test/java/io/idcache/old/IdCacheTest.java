@@ -1,4 +1,4 @@
-package io.idcache.test;
+package io.idcache.old;
 
 
 import io.idcache.increaser.Increaser;
