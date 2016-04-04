@@ -1,4 +1,4 @@
-package io.idcache.test.simple;
+package io.idcache.old.simple;
 
 
 import io.idcache.IntIdCache;
@@ -7,7 +7,7 @@ import io.idcache.LimitationReachedException;
 import io.idcache.LongIdCache;
 import io.idcache.increaser.Increaser;
 import io.idcache.increaser.integer.SequentialIntIncreaser;
-import io.idcache.test.IdCacheTest;
+import io.idcache.old.IdCacheTest;
 
 import java.util.ArrayList;
 import java.util.List;
